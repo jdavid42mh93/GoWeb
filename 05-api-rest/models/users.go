@@ -6,12 +6,12 @@ import (
 )
 
 type User struct {
-	Id        int64
-	FirstName string
-	LastName  string
-	Username  string
-	Password  string
-	Email     string
+	Id        int64  `json:"id"`
+	FirstName string `json:"firstname"`
+	LastName  string `json:"lastname"`
+	Username  string `json:"username"`
+	Password  string `json:"password"`
+	Email     string `json:"email"`
 }
 
 type Users []User
@@ -47,26 +47,30 @@ func CreateUser(first_name, last_name, username, password, email string) *User {
 	return user
 }
 
-func ListUsers() Users {
+func ListUsers() (Users, error) {
 	sql := "SELECT id,first_name,last_name,username,password,email FROM users"
 	users := Users{}
-	rows, _ := db.Query(sql)
+	rows, err := db.Query(sql)
 	for rows.Next() {
 		user := User{}
 		rows.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Username, &user.Password, &user.Email)
 		users = append(users, user)
 	}
-	return users
+	return users, err
 }
 
-func GetUser(id int) *User {
+func GetUser(id int) (*User, error) {
 	user := NewUser("", "", "", "", "")
 	sql := "SELECT id,first_name,last_name,username,password,email FROM users WHERE id = $1"
-	rows, _ := db.Query(sql, id)
-	for rows.Next() {
-		rows.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Username, &user.Password, &user.Email)
+	if rows, err := db.Query(sql, id); err != nil {
+		return nil, err
+	} else {
+		for rows.Next() {
+			rows.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Username, &user.Password, &user.Email)
+		}
+		return user, err
 	}
-	return user
+
 }
 
 func (user *User) update() {
